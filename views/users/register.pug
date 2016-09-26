@@ -1,0 +1,23 @@
+extends ../layout
+
+block content
+  if errors
+    .alert.alert-danger
+      p Validation errors:
+      ul
+        each error in errors
+          li= error.msg
+  form(method='POST')
+    .form-group
+      label(for='username') Username
+      input.form-control(type='text', name='username', id='username', value=user.username)
+    .form-group
+      label(for='password_orig') Password
+      input.form-control(type='text', name='password[orig]', id='password_orig')
+    .form-group
+      label(for='password_confirm') Confirm Password
+      input.form-control(type='text', name='password[confirm]', id='password_confirm')
+    .form-group
+      label(for='email') Email (optional)
+      input.form-control(type='text', name='email', id='email', value=user.email)
+    input.btn.btn-default(type='submit')
