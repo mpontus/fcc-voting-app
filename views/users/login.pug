@@ -1,0 +1,18 @@
+extends ../layout
+
+block content
+  if errors
+    .alert.alert-danger
+      p Validation errors:
+      ul
+        each error in errors
+          li= error
+  form(method='POST')
+    .form-group
+      label(for='username') Username
+      input.form-control(type='text', name='username', id='username')
+    .form-group
+      label(for='password') Password
+      input.form-control(type='password', name='password', id='password')
+
+    button.btn.btn-default(type='submit') Login

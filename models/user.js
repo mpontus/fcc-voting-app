@@ -1,20 +1,25 @@
 var mongoose = require('mongoose');
+var validator = require('validator');
 var bcrypt = require('bcrypt-nodejs');
+var uniqid = require('uniqid');
 
 var User = mongoose.Schema({
-  email: String,
-  username: String,
-  password: String,
+  username: {
+    type: String,
+    required: [true, 'Username cannot be empty'],
+    unique: [true, 'Username is already taken'],
+  },
+  github: {
+    id: Number,
+  },
 });
 
-// Generate a hash from plain-text password
-User.methods.generateHash = function(password) {
-  return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
-};
-
-// Validate plain-text password against password hash
-User.methods.validPassword = function(password) {
-  return bcrypt.compareSync(password, this.local.password);
-};
+User.statics.generateUniqueUsername = function(base, cb) {
+  this.findOne({'username': base}, function(err, user) {
+    if (err) return cb(err);
+    if (!user) return cb(null, base);
+    cb(null, uniqid(base + '-'));
+  });
+}
 
 module.exports = mongoose.model('User', User);

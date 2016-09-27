@@ -14,7 +14,8 @@ require('dotenv').config();
 
 mongoose.connect(process.env.MONGODB_URL);
 
-require('./config/passport')(passport);
+// require('./config/passport')(passport);
+require('./passport.js')(passport);
 
 var app = express();
 
@@ -31,10 +32,32 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(function(req, res, next) {
+  res.locals.user = req.user;
+  next();
+});
 app.use(flash());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', routes);
+app.get('/', function(req, res) {
+  console.log(req.user);
+  res.render('index');
+});
+
+app.get('/logout', function(req, res) {
+  req.logout();
+  res.redirect('/');
+});
+
+app.get('/auth/github', passport.authenticate('github'));
+app.get('/auth/github/callback', passport.authenticate('github', {
+  successRedirect: '/',
+  failureRedirect: '/login',
+}));
+
+app.get('/polls/new', function(req, res) {
+  res.render('polls/new');
+});
 
 var port = process.env.PORT || 3000;
 app.listen(port, function() {

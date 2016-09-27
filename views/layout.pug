@@ -4,5 +4,18 @@ html
     title= title
     link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css')
   body
+    nav.navbar.navbar-default
+      .navbar-header
+        a.navbar-brand Voting App
+      ul.nav.navbar-nav.pull-right
+        if (!user)
+          li
+            a(href="/auth/github") Login with Github
+        else
+          li
+            p.navbar-text= user.username
+          li
+            a(href="/logout") Log Out
     .container
+      pre #{JSON.stringify(user)}
       block content
