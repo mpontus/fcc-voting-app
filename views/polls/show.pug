@@ -1,0 +1,13 @@
+extends ../layout
+
+block content
+  h2= poll.question
+  
+  form(method='post', action='/polls/'+poll.id+'/votes')
+    each option in poll.options
+      .radio
+        label
+          input(type='radio', name='choice', value=option)
+          | #{option}&nbsp;
+          span.badge= poll.votes[option] || 0
+    button(type='submit') Submit your vote

@@ -1,0 +1,8 @@
+extends ../layout
+
+block content
+  each poll in polls
+    p
+      a(href='/polls/'+poll.id)= poll.question
+    hr
+

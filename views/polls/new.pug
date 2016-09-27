@@ -1,0 +1,11 @@
+extends ../layout
+
+block content
+  form(method='post', action='/polls')
+    
+    input(name='question')
+    input(name='options[]')
+    input(name='options[]')
+    input(name='options[]')
+    input(name='options[]')
+    input(type='submit')
