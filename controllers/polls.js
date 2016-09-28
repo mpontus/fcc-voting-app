@@ -1,3 +1,4 @@
+var mongoose = require('mongoose');
 var Poll = require('../models/poll');
 var Vote = require('../models/vote');
 
@@ -18,26 +19,35 @@ module.exports = {
     var pollId = req.params.id;
     Poll.findOne({_id: pollId}, function(err, poll) {
       if (err) throw err;
+
       if (!poll) {
-        return res.status(404).send('Not found');
+        var err = Error("Not found");
+        err.status = 404;
+        throw err;
       }
-      console.log(poll.id);
-      Vote.findOne({
-        pollId: poll.id,
-        visitorId: req.visitor.id,
-      }, function(err, vote) {
-        if (err) throw err;
 
-        var currentChoice;
-        if (vote) {
-          currentChoice = vote.choice;
-        }
+      Vote.aggregate([{
+        $match: { 'pollId': mongoose.Types.ObjectId(poll.id), }
+      }, {
+        $group: { _id: "$choice", count: { $sum: 1, }, },
+      }], function(err, results) {
 
-        console.log(currentChoice);
+        var votes = results.reduce(function(memo, curr) {
+          memo[curr._id] = curr.count;
+          return memo;
+        }, {});
 
-        res.render('polls/show', {
-          poll: poll,
-          currentChoice: currentChoice,
+        Vote.findOne({
+          pollId: mongoose.Types.ObjectId(poll.id),
+          voterId: req.visitor.id,
+        }, function(err, vote) {
+          var myChoice = vote ? vote.choice : null;
+
+          res.render('polls/show', {
+            poll: poll,
+            votes: votes,
+            myChoice: myChoice,
+          });
         });
       });
     });

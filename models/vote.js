@@ -1,8 +1,9 @@
 var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
 var Poll = require('./poll');
 
-var Vote = mongoose.Schema({
-  _pollId: {
+var Vote = Schema({
+  pollId: {
     type: Schema.Types.ObjectId,
     ref: 'Poll',
     required: true,
@@ -11,7 +12,7 @@ var Vote = mongoose.Schema({
     type: String,
     required: true,
   },
-  visitorId: {
+  voterId: {
     type: String,
     required: true,
   },

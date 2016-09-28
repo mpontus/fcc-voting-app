@@ -9,11 +9,7 @@ var Poll = mongoose.Schema({
   options: [{
     type: String,
     trim: true,
-  }],
-  votes: {
-    type: Object,
-    default: {},
-  }
+  }]
 });
 
 module.exports = mongoose.model('Poll', Poll);

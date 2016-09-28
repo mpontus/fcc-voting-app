@@ -9,7 +9,9 @@ block content
       .radio
         label
           input(type='radio', name='choice', value=option,
-                checked=(currentChoice==option))
+                checked=(myChoice==option))
           | #{option}&nbsp;
-          span.badge= poll.votes[option] || 0
+          span.badge= votes[option] || 0
     button(type='submit') Submit your vote
+
+  

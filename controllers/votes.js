@@ -15,50 +15,29 @@ module.exports = {
         throw err;
       }
 
-      // Try and find existing vote
-      Vote.findOne({pollId: poll.id, visitorId: visitorId}, function(err) {
+      // Try to find existing vote
+      Vote.findOne({
+        pollId: poll.id,
+        voterId: visitorId,
+      }, function(err, vote) {
         if (err) throw err;
         if (vote) {
-          poll.votes[vote.choice]--;
-          if (poll.votes[choice]) {
-            poll.votes[choice]++;
-          } else {
-            poll.votes[choice] = 1;
-          }
+          vote.choice = choice;
+          vote.save(handleSaveVote);
         } else {
           var newVote = new Vote({
             pollId: pollId,
             choice: choice,
-            visitorId: req.visitor.id,
+            voterId: req.visitor.id,
           });
           newVote.save(handleSaveVote);
-      } else {
-          vote.
-
+        }
       });
 
-
-      vote.save(function(err) {
+      function handleSaveVote(err) {
         if (err) throw err;
-
-        if (poll.options.indexOf(choice) === -1) {
-          poll.options.push(choice);
-          poll.markModified('options');
-        }
-
-        if (poll.votes[choice]) {
-          poll.votes[choice]++;
-        } else {
-          poll.votes[choice] = 0;
-        }
-        poll.markModified('votes');
-
-        poll.save(function(err) {
-          if (err) throw err;
-
-          res.redirect('/polls/'+poll.id);
-        });
-      });
+        res.redirect('/polls/'+poll.id);
+      };
     });
   },
 }
