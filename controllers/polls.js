@@ -5,14 +5,16 @@ var Vote = require('../models/vote');
 module.exports = {
   index: function (req, res) {
     Poll.find({}, function(err, polls) {
-      res.render('polls/list', {
-        polls: polls,
+      res.json({
+        polls: polls.map(function(poll) {
+          return {
+            id: poll.id,
+            question: poll.question,
+            options: poll.options
+          };
+        }),
       });
     });
-  },
-
-  new: function(req, res) {
-    res.render('polls/new');
   },
 
   show: function(req, res) {
@@ -43,8 +45,12 @@ module.exports = {
         }, function(err, vote) {
           var myChoice = vote ? vote.choice : null;
 
-          res.render('polls/show', {
-            poll: poll,
+          res.json({
+            poll: {
+              id: poll.id,
+              question: poll.question,
+              options: poll.options
+            },
             votes: votes,
             myChoice: myChoice,
           });
@@ -69,7 +75,13 @@ module.exports = {
     poll.options = options;
     poll.save(function(err) {
       if (err) throw err;
-      res.redirect('/polls/'+poll.id);
+      res.json({
+        poll: {
+          id: poll.id,
+          question: poll.question,
+          options: poll.options
+        },
+      });
     });
   },
 }

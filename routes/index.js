@@ -5,8 +5,8 @@ var votes = require('./votes');
 var router = express.Router();
 
 router.use('/auth', auth);
-router.use('/polls', polls);
-router.use('/votes', votes);
+router.use('/api/polls', polls);
+router.use('/api/votes', votes);
 
 router.get('/', function(req, res) {
   res.redirect('/polls');
