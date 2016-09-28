@@ -12,6 +12,10 @@ var User = mongoose.Schema({
   github: {
     id: Number,
   },
+  visitorId: {
+    type: String,
+    required: true,
+  },
 });
 
 User.statics.generateUniqueUsername = function(base, cb) {
