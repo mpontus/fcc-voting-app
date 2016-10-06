@@ -3,37 +3,36 @@ import React from 'react';
 export default React.createClass({
   getInitialState: function() {
     return {
-      poll: {
-        id: null,
-        question: "",
-        options: [],
-      },
-      votes: {},
-      myChoice: null,
+      poll: null,
+      fetched: false,
+      newChoiceValue: "",
+      newChoiceSelected: false,
     };
   },
 
   componentDidMount: function() {
-    fetch(`/api/polls/${this.props.params.pollId}`).then((response) => {
+    fetch(`/api/polls/${this.props.params.pollId}`, {
+      credentials: 'include',
+    }).then((response) => {
       return response.json();
     }).then((data) => {
       this.setState({
-        poll: data.poll,
-        votes: data.votes,
-        myChoice: data.myChoice,
+        ...data,
+        fetched: true
       });
     });
   },
 
   handleChoice: function(e) {
+    var newChoice = e.target.value;
+
     this.setState({
       newChoiceSelected: false,
       newChoiceValue: "",
-      myChoice: e.target.value,
+      myChoice: newChoice,
     });
 
-    var query = new URLSearchParams();
-    query.append('pollId', this.state.poll.id);
+    this.submitVote(newChoice);
   },
 
   handleNewChoiceSelect: function(e) {
@@ -50,31 +49,71 @@ export default React.createClass({
     });
   },
 
+  handleNewChoiceSubmit: function(e) {
+    e.target.blur();
+
+    var newChoice = e.target.value;
+
+    this.setState({
+      poll: {
+        ...this.state.poll,
+        options: [
+          ...this.state.poll.options,
+          newChoice
+        ],
+      },
+      newChoiceSelected: false,
+      newChoiceValue: "",
+      myChoice: newChoice,
+    });
+
+    this.submitVote(newChoice);
+  },
+
+  submitVote: function(choice) {
+    var query = new URLSearchParams();
+    query.append('pollId', this.state.poll.id);
+    query.append('choice', choice);
+    fetch('/api/votes', {
+      method: 'post',
+      body: query,
+      credentials: 'include',
+    }).then(response => response.json())
+      .then(data => {
+        this.setState(data);
+      })
+      .catch(err => {
+        console.warn(err);
+      });
+  },
+
   render: function() {
     return <div>
-      <h3>{this.state.poll.question}</h3>
-      {this.state.poll.options.map((option, i) =>
-        <p key={i}>
-          <label>
-            <input type="radio" name="choice" value={option} onChange={this.handleChoice} 
-              checked={!this.state.newChoiceSelected && this.state.myChoice === option} />
-            <span>{option}</span>
-          </label>
-        </p>
+      {this.state.poll && (
+       <div>
+         <h3>{this.state.poll.question}</h3>
+         {this.state.poll.options.map((option, i) =>
+           <p key={i}>
+             <label>
+               <input type="radio" name="choice" value={option} onChange={this.handleChoice}
+                 checked={!this.state.newChoiceSelected && this.state.myChoice === option} />
+               <span>{option}</span> <span>{this.state.poll.votes[option] || 0}</span>
+             </label>
+           </p>
+          )}
+           <p>
+             <label>
+               <input type="radio" name="choice" value=""
+                 checked={this.state.newChoiceSelected} />
+               <input type="text"
+                 value={this.state.newChoiceValue}
+                 onFocus={this.handleNewChoiceSelect}
+                 onChange={this.handleNewChoiceChange}
+                 onKeyDown={(e) => e.keyCode === 13 && this.handleNewChoiceSubmit(e)} />
+             </label>
+           </p>
+       </div>
       )}
-        {this.state.poll.id &&
-         <p>
-           <label>
-             <input type="radio" name="choice" ref={(c) => this._newChoice = this}
-               checked={this.state.newChoiceSelected} />
-             <input type="text"
-               onFocus={this.handleNewChoiceSelect}
-               onChange={this.handleNewChoiceChange}
-
-             />
-           </label>
-         </p>
-        }
     </div>;
   }
 });

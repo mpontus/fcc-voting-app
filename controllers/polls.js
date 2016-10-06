@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var Poll = require('../models/poll');
 var Vote = require('../models/vote');
+var votingService = require('../services/voting.js');
 
 module.exports = {
   index: function (req, res) {
@@ -19,43 +20,10 @@ module.exports = {
 
   show: function(req, res) {
     var pollId = req.params.id;
-    Poll.findOne({_id: pollId}, function(err, poll) {
+    var visitorId = req.visitor.id;
+    votingService.getPoll(pollId, visitorId, function(err, data) {
       if (err) throw err;
-
-      if (!poll) {
-        var err = Error("Not found");
-        err.status = 404;
-        throw err;
-      }
-
-      Vote.aggregate([{
-        $match: { 'pollId': mongoose.Types.ObjectId(poll.id), }
-      }, {
-        $group: { _id: "$choice", count: { $sum: 1, }, },
-      }], function(err, results) {
-
-        var votes = results.reduce(function(memo, curr) {
-          memo[curr._id] = curr.count;
-          return memo;
-        }, {});
-
-        Vote.findOne({
-          pollId: mongoose.Types.ObjectId(poll.id),
-          voterId: req.visitor.id,
-        }, function(err, vote) {
-          var myChoice = vote ? vote.choice : null;
-
-          res.json({
-            poll: {
-              id: poll.id,
-              question: poll.question,
-              options: poll.options
-            },
-            votes: votes,
-            myChoice: myChoice,
-          });
-        });
-      });
+      res.json(data);
     });
   },
 

@@ -27388,11 +27388,13 @@
 /* 239 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var _react = __webpack_require__(1);
 
@@ -27400,44 +27402,44 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 	exports.default = _react2.default.createClass({
-	  displayName: "Poll",
+	  displayName: 'Poll',
 
 	  getInitialState: function getInitialState() {
 	    return {
-	      poll: {
-	        id: null,
-	        question: "",
-	        options: []
-	      },
-	      votes: {},
-	      myChoice: null
+	      poll: null,
+	      fetched: false,
+	      newChoiceValue: "",
+	      newChoiceSelected: false
 	    };
 	  },
 
 	  componentDidMount: function componentDidMount() {
 	    var _this = this;
 
-	    fetch("/api/polls/" + this.props.params.pollId).then(function (response) {
+	    fetch('/api/polls/' + this.props.params.pollId, {
+	      credentials: 'include'
+	    }).then(function (response) {
 	      return response.json();
 	    }).then(function (data) {
-	      _this.setState({
-	        poll: data.poll,
-	        votes: data.votes,
-	        myChoice: data.myChoice
-	      });
+	      _this.setState(_extends({}, data, {
+	        fetched: true
+	      }));
 	    });
 	  },
 
 	  handleChoice: function handleChoice(e) {
+	    var newChoice = e.target.value;
+
 	    this.setState({
 	      newChoiceSelected: false,
 	      newChoiceValue: "",
-	      myChoice: e.target.value
+	      myChoice: newChoice
 	    });
 
-	    var query = new URLSearchParams();
-	    query.append('pollId', this.state.poll.id);
+	    this.submitVote(newChoice);
 	  },
 
 	  handleNewChoiceSelect: function handleNewChoiceSelect(e) {
@@ -27454,49 +27456,95 @@
 	    });
 	  },
 
-	  render: function render() {
+	  handleNewChoiceSubmit: function handleNewChoiceSubmit(e) {
+	    e.target.blur();
+
+	    var newChoice = e.target.value;
+
+	    this.setState({
+	      poll: _extends({}, this.state.poll, {
+	        options: [].concat(_toConsumableArray(this.state.poll.options), [newChoice])
+	      }),
+	      newChoiceSelected: false,
+	      newChoiceValue: "",
+	      myChoice: newChoice
+	    });
+
+	    this.submitVote(newChoice);
+	  },
+
+	  submitVote: function submitVote(choice) {
 	    var _this2 = this;
 
+	    var query = new URLSearchParams();
+	    query.append('pollId', this.state.poll.id);
+	    query.append('choice', choice);
+	    fetch('/api/votes', {
+	      method: 'post',
+	      body: query,
+	      credentials: 'include'
+	    }).then(function (response) {
+	      return response.json();
+	    }).then(function (data) {
+	      _this2.setState(data);
+	    }).catch(function (err) {
+	      console.warn(err);
+	    });
+	  },
+
+	  render: function render() {
+	    var _this3 = this;
+
 	    return _react2.default.createElement(
-	      "div",
+	      'div',
 	      null,
-	      _react2.default.createElement(
-	        "h3",
-	        null,
-	        this.state.poll.question
-	      ),
-	      this.state.poll.options.map(function (option, i) {
-	        return _react2.default.createElement(
-	          "p",
-	          { key: i },
-	          _react2.default.createElement(
-	            "label",
-	            null,
-	            _react2.default.createElement("input", { type: "radio", name: "choice", value: option, onChange: _this2.handleChoice,
-	              checked: !_this2.state.newChoiceSelected && _this2.state.myChoice === option }),
-	            _react2.default.createElement(
-	              "span",
-	              null,
-	              option
-	            )
-	          )
-	        );
-	      }),
-	      this.state.poll.id && _react2.default.createElement(
-	        "p",
+	      this.state.poll && _react2.default.createElement(
+	        'div',
 	        null,
 	        _react2.default.createElement(
-	          "label",
+	          'h3',
 	          null,
-	          _react2.default.createElement("input", { type: "radio", name: "choice", ref: function ref(c) {
-	              return _this2._newChoice = _this2;
-	            },
-	            checked: this.state.newChoiceSelected }),
-	          _react2.default.createElement("input", { type: "text",
-	            onFocus: this.handleNewChoiceSelect,
-	            onChange: this.handleNewChoiceChange
-
-	          })
+	          this.state.poll.question
+	        ),
+	        this.state.poll.options.map(function (option, i) {
+	          return _react2.default.createElement(
+	            'p',
+	            { key: i },
+	            _react2.default.createElement(
+	              'label',
+	              null,
+	              _react2.default.createElement('input', { type: 'radio', name: 'choice', value: option, onChange: _this3.handleChoice,
+	                checked: !_this3.state.newChoiceSelected && _this3.state.myChoice === option }),
+	              _react2.default.createElement(
+	                'span',
+	                null,
+	                option
+	              ),
+	              ' ',
+	              _react2.default.createElement(
+	                'span',
+	                null,
+	                _this3.state.poll.votes[option] || 0
+	              )
+	            )
+	          );
+	        }),
+	        _react2.default.createElement(
+	          'p',
+	          null,
+	          _react2.default.createElement(
+	            'label',
+	            null,
+	            _react2.default.createElement('input', { type: 'radio', name: 'choice', value: '',
+	              checked: this.state.newChoiceSelected }),
+	            _react2.default.createElement('input', { type: 'text',
+	              value: this.state.newChoiceValue,
+	              onFocus: this.handleNewChoiceSelect,
+	              onChange: this.handleNewChoiceChange,
+	              onKeyDown: function onKeyDown(e) {
+	                return e.keyCode === 13 && _this3.handleNewChoiceSubmit(e);
+	              } })
+	          )
 	        )
 	      )
 	    );
